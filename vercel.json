@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/api/:recurso/:id/:acao", "destination": "/api/:recurso?id=:id&acao=:acao" },
+    { "source": "/api/:recurso/:id", "destination": "/api/:recurso?id=:id" },
+    { "source": "/((?!api/|@)[^.]*)", "destination": "/index.html" }
+  ]
+}
