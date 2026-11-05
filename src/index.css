@@ -1,0 +1,73 @@
+@import 'tailwindcss';
+@import 'leaflet/dist/leaflet.css';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/fraunces';
+
+/*
+ * Identidade visual "Natural e acolhedor": creme, oliva e sálvia, com laranja
+ * reservado para alertas. Fontes hospedadas no próprio site (sem Google Fonts).
+ */
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Fraunces Variable', ui-serif, Georgia, serif;
+
+  /* Oliva (marca) — 700 é a cor principal; texto branco sobre 700 tem contraste AA. */
+  --color-marca-50: #f3f5ee;
+  --color-marca-100: #e4eadb;
+  --color-marca-200: #ccd6bb;
+  --color-marca-300: #a3b18a;
+  --color-marca-400: #869a6a;
+  --color-marca-500: #6b8250;
+  --color-marca-600: #5b7344;
+  --color-marca-700: #4f6b3a;
+  --color-marca-800: #3e5530;
+  --color-marca-900: #2e3f24;
+
+  --color-creme: #f6f3ea;
+  --color-creme-escuro: #ece6d6;
+  --color-tinta: #2b2b24;
+
+  /* Laranja de alerta — 600 para fundos com texto branco, 800 para texto. */
+  --color-alerta-50: #fbf1e7;
+  --color-alerta-100: #f6dfc8;
+  --color-alerta-400: #d98e4a;
+  --color-alerta-600: #b4672a;
+  --color-alerta-800: #7a4219;
+
+  --radius-cartao: 1.5rem;
+}
+
+@layer base {
+  html {
+    font-size: 16px;
+  }
+  body {
+    background-color: var(--color-creme);
+    color: var(--color-tinta);
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Foco sempre visível (acessibilidade). */
+:focus-visible {
+  outline: 3px solid var(--color-marca-600);
+  outline-offset: 2px;
+}
+
+.leaflet-container {
+  font: inherit;
+  border-radius: inherit;
+}
+
+/* Suaviza as cores do OpenStreetMap para combinar com a paleta creme/oliva. */
+.mapa-tiles {
+  filter: saturate(0.7) sepia(0.12) brightness(1.02);
+}
+.leaflet-popup-content-wrapper {
+  border-radius: 1rem;
+}
