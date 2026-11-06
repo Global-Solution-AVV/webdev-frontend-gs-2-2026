@@ -37,7 +37,7 @@ export function TutorPerdidos() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-semibold">Animais perdidos</h1>
+          <h1 className="text-3xl font-semibold">Animais perdidos sem chip</h1>
           <p className="text-stone-700">
             Para pets sem microchip: cadastre e compare com os avistamentos dos pontos de
             identificação.

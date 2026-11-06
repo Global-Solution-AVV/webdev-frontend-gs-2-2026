@@ -116,7 +116,7 @@ export function Cadastrar() {
             onChange={alterar}
             autoComplete="tel"
             placeholder="(11) 90000-0000"
-            dica="Só o sistema usa este número para avisar você. Ele nunca aparece para ONGs nem no mapa."
+            dica="O sistema usa este número para avisar você. Ele só fica público se você publicar um cartaz de pet perdido."
           />
         )}
         <Alerta tipo="erro">{form.erro}</Alerta>

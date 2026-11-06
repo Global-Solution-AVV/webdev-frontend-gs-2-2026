@@ -1,9 +1,10 @@
 import { Link } from 'react-router'
+import { Megaphone } from 'lucide-react'
 import { FotoAnimal } from './FotoAnimal'
 import { ESPECIES } from '../lib/formatos'
 import { botao, cartao } from '../lib/estilos'
 
-export function CardPet({ pet, aoAlternarModoPerdido, aoExcluir, alternando }) {
+export function CardPet({ pet, aoAlternarModoPerdido, aoAlternarCartaz, aoExcluir, alternando }) {
   return (
     <article className={`${cartao} flex flex-col gap-3`}>
       <FotoAnimal url={pet.foto_url} alt={`Foto de ${pet.nome}`} />
@@ -33,6 +34,38 @@ export function CardPet({ pet, aoAlternarModoPerdido, aoExcluir, alternando }) {
             ? 'Ligado: você recebe o aviso na hora, com local e horário.'
             : 'Desligado: no máximo um aviso por dia, para você não receber mensagem demais.'}
         </p>
+      </div>
+
+      <div
+        className={`rounded-lg px-3 py-2 ${pet.cartaz_publico ? 'bg-marca-50 text-marca-900' : 'bg-stone-100 text-stone-700'}`}
+      >
+        <label className="flex cursor-pointer items-center justify-between gap-3 font-semibold">
+          <span className="inline-flex items-center gap-2">
+            <Megaphone aria-hidden="true" size={16} />
+            Cartaz público
+          </span>
+          <input
+            type="checkbox"
+            role="switch"
+            className="h-5 w-5 accent-marca-700"
+            checked={Boolean(pet.cartaz_publico)}
+            disabled={alternando}
+            onChange={() => aoAlternarCartaz(pet)}
+          />
+        </label>
+        <p className="mt-1 text-sm">
+          {pet.cartaz_publico
+            ? 'Ligado: enquanto o modo perdido estiver ligado, o cartaz aparece em "Animais perdidos" com seu primeiro nome e seu telefone.'
+            : 'Desligado: seu pet e seu telefone não aparecem para o público.'}
+        </p>
+        {pet.cartaz_publico && pet.modo_perdido && (
+          <Link
+            to="/cartazes"
+            className="mt-1 inline-block text-sm font-semibold text-marca-800 underline"
+          >
+            Ver cartaz publicado
+          </Link>
+        )}
       </div>
 
       <div className="mt-auto flex gap-2">

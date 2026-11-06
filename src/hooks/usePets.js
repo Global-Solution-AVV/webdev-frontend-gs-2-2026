@@ -5,6 +5,7 @@ import {
   criarPet,
   atualizarPet,
   definirModoPerdido,
+  definirCartaz,
   excluirPet,
 } from '../services/petsService'
 
@@ -44,6 +45,15 @@ export function usePets() {
     [trocar],
   )
 
+  const alternarCartaz = useCallback(
+    async (pet) => {
+      const atualizado = await definirCartaz(pet.id, !pet.cartaz_publico)
+      trocar(atualizado)
+      return atualizado
+    },
+    [trocar],
+  )
+
   const excluir = useCallback(
     async (id) => {
       await excluirPet(id)
@@ -60,6 +70,7 @@ export function usePets() {
     criar,
     atualizar,
     alternarModoPerdido,
+    alternarCartaz,
     excluir,
   }
 }

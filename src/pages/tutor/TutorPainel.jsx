@@ -18,11 +18,11 @@ export function TutorPainel() {
   const [alternandoId, setAlternandoId] = useState(null)
   const [erroAcao, setErroAcao] = useState(null)
 
-  async function alternar(pet) {
+  async function alternar(pet, fn = pets.alternarModoPerdido) {
     setAlternandoId(pet.id)
     setErroAcao(null)
     try {
-      await pets.alternarModoPerdido(pet)
+      await fn(pet)
     } catch (e) {
       setErroAcao(e.message)
     } finally {
@@ -115,6 +115,7 @@ export function TutorPainel() {
                 pet={p}
                 alternando={alternandoId === p.id}
                 aoAlternarModoPerdido={alternar}
+                aoAlternarCartaz={(pet) => alternar(pet, pets.alternarCartaz)}
                 aoExcluir={setParaExcluir}
               />
             ))}

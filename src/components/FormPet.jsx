@@ -3,7 +3,7 @@ import { Campo } from './Campo'
 import { Alerta } from './Alerta'
 import { botao } from '../lib/estilos'
 
-const VAZIO = { nome: '', especie: '', chip: '', foto_url: '' }
+const VAZIO = { nome: '', especie: '', chip: '', foto_url: '', cartaz_descricao: '' }
 
 export function FormPet({ inicial, aoSalvar, aoCancelar }) {
   const { valores, alterar, enviar, enviando, erro } = useFormulario(
@@ -51,6 +51,15 @@ export function FormPet({ inicial, aoSalvar, aoCancelar }) {
         onChange={alterar}
         placeholder="https://..."
         dica="Cole o link de uma foto do seu pet."
+      />
+      <Campo
+        rotulo="Texto do cartaz (opcional)"
+        como="textarea"
+        name="cartaz_descricao"
+        value={valores.cartaz_descricao ?? ''}
+        onChange={alterar}
+        maxLength={500}
+        dica="Aparece no cartaz público se o pet se perder e você autorizar. Ex.: cor da coleira, onde sumiu, se é medroso."
       />
       <Alerta tipo="erro">{erro}</Alerta>
       <div className="flex gap-3">
