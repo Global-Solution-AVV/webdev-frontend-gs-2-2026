@@ -23,14 +23,14 @@ Aplicação web das disciplinas **Front-end Design** e **Web Development**.
 
 ## Funcionalidades
 
-| Perfil                  | O que faz                                                                                                                                                                                                 |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Público** (sem login) | Mapa de avistamentos e animais perdidos, com filtro por período, espécie e raio ("perto de mim")                                                                                                          |
-| **Tutor**               | CRUD de pets com microchip, modo perdido, avisos (SMS simulado) com os botões "Está tudo bem" / "Ele está perdido", CRUD de animais perdidos sem chip e comparação com avistamentos próximos ("É o meu!") |
-| **ONG**                 | Cadastro da área de atuação e das vagas, painel de ocorrências (só as do raio e com vaga), assumir resgate, atualizar status, histórico e o **padrão de horários** ("aparece entre 21h e 23h")            |
-| **Coordenação**         | CRUD dos pontos de identificação, estoque de ração com alerta, chave de API por ponto, **simulador de detecção** e visão de todas as ocorrências                                                          |
+| Perfil                  | O que faz                                                                                                                                                                                                                                             |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Público** (sem login) | Mapa de avistamentos e animais perdidos, com filtro por período, espécie e raio ("perto de mim"), e mural de **cartazes** de pets com chip (procurando / encontrados)                                                                                 |
+| **Tutor**               | CRUD de pets com microchip, modo perdido, cartaz público opcional (expõe o telefone), avisos (SMS simulado) com os botões "Está tudo bem" / "Ele está perdido", CRUD de animais perdidos sem chip e comparação com avistamentos próximos ("É o meu!") |
+| **ONG**                 | Cadastro da área de atuação e das vagas, painel de ocorrências (só as do raio e com vaga), assumir resgate, atualizar status, histórico e o **padrão de horários** ("aparece entre 21h e 23h")                                                        |
+| **Coordenação**         | CRUD dos pontos de identificação, estoque de ração com alerta, chave de API por ponto, **simulador de detecção** e visão de todas as ocorrências                                                                                                      |
 
-Regras de negócio principais: máximo de 1 aviso por dia por pet (exceto em modo perdido), avistamento só vira resgate depois de **N = 3 dias** de recorrência, reserva da ONG expira em **X = 24 h** sem atualização, e o telefone do tutor nunca aparece para ONGs nem no mapa.
+Regras de negócio principais: máximo de 1 aviso por dia por pet (exceto em modo perdido), avistamento só vira resgate depois de **N = 3 dias** de recorrência, reserva da ONG expira em **X = 24 h** sem atualização, e o telefone do tutor só aparece no cartaz público, se ele autorizar, e só enquanto o pet está perdido.
 
 ## Stack
 
@@ -58,7 +58,8 @@ O front-end **não** acessa o banco direto: o RLS está ligado sem políticas, e
 api/                 Backend (uma função por recurso)
   _lib/              Infra compartilhada (não vira rota)
     regras/          Regras de negócio puras + testes (Vitest)
-supabase/schema.sql  Tabelas, índices, gatilho de perfil e RLS
+supabase/schema.sql  Tabelas, índices, gatilhos e RLS
+supabase/migracoes/  Alterações para bancos já criados
 scripts/seed.js      Dados fictícios de demonstração
 src/
   services/          Acesso a dados (fetch para a API)
@@ -87,15 +88,15 @@ Separação de responsabilidades: **componentes não chamam `fetch`**. Páginas 
    ```bash
    npm install
    ```
-2. **Crie o banco**: no Supabase, abra o _SQL Editor_ e rode o arquivo `supabase/schema.sql` inteiro.
+2. **Crie o banco**: no Supabase, abra o _SQL Editor_ e rode o arquivo `supabase/schema.sql` inteiro. Banco criado antes de 06/11/2026? Rode também `supabase/migracoes/2026-11-06-cartazes.sql`.
 3. **Configure as variáveis**: copie `.env.example` para `.env` e preencha com os dados do projeto Supabase (_Project Settings → API_).
 
-   | Variável                                      | Uso                                                                               |
-   | --------------------------------------------- | --------------------------------------------------------------------------------- |
-   | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | Login no navegador                                                                |
-   | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`   | Funções `/api` (nunca use o prefixo `VITE_` na service role)                      |
-   | `CONFIDENCE_MINIMA`                           | Confiança mínima para aceitar a detecção (0 a 1). **A alinhar com Python e Edge** |
-   | `RAIO_COMPARACAO_PERDIDOS_KM`                 | Raio dos avistamentos próximos a um animal perdido. **A definir**                 |
+   | Variável                                      | Uso                                                               |
+   | --------------------------------------------- | ----------------------------------------------------------------- |
+   | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | Login no navegador                                                |
+   | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`   | Funções `/api` (nunca use o prefixo `VITE_` na service role)      |
+   | `CONFIDENCE_MINIMA`                           | Confiança mínima para aceitar a detecção (0 a 1). Usamos **0.75** |
+   | `RAIO_COMPARACAO_PERDIDOS_KM`                 | Raio dos avistamentos próximos a um animal perdido. Usamos **3**  |
 
 4. **Popule com dados fictícios** (opcional, recomendado para a demonstração):
 
@@ -105,7 +106,7 @@ Separação de responsabilidades: **componentes não chamam `fetch`**. Páginas 
 
    Contas criadas (senha `devolta123`, todas `@devolta.demo`): `coordenacao`; tutores `ana.tutora`, `bruno.tutor`, `carla.tutora`, `diego.tutor`, `elisa.tutora`; ONGs `patas`, `abrigo` (sem vagas), `resgate.sul`, `miados`, `lar.leste`.
 
-   O seed cria 12 pontos (DV-001 a DV-012, chave `dv_demo_<código>`), cada um com leituras de chip (avisos aos tutores) e avistamentos sem chip, 8 pets com chip (2 em modo perdido), 3 animais perdidos sem chip e 7 ocorrências cobrindo todos os status, inclusive uma reserva vencida. Para ver uma ocorrência nascer, simule um cachorro sem chip no DV-003.
+   O seed cria 12 pontos (DV-001 a DV-012, chave `dv_demo_<código>`), cada um com leituras de chip (avisos aos tutores) e avistamentos sem chip, 30 tutores (os 5 acima e mais 25 extras, `tutor06` a `tutor30@devolta.demo`, mesma senha), 50 pets com chip (10 perdidos com cartaz público e 7 encontrados), 3 animais perdidos sem chip e 7 ocorrências cobrindo todos os status, inclusive uma reserva vencida. Para ver uma ocorrência nascer, simule um cachorro sem chip no DV-003.
 
 5. **Rode front-end + API juntos**:
    ```bash
@@ -129,17 +130,17 @@ Separação de responsabilidades: **componentes não chamam `fetch`**. Páginas 
 
 Todas as rotas respondem JSON. Erros vêm como `{ "erro": "mensagem" }`. Rotas com login usam `Authorization: Bearer <token do Supabase>`.
 
-| Recurso             | Rotas                                                                                                                 |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `/api/me`           | `GET` · `POST` · `PUT` · `DELETE`                                                                                     |
-| `/api/pets`         | `GET` · `GET /:id` · `POST` · `PUT /:id` · `PATCH /:id/modo-perdido` · `DELETE /:id`                                  |
-| `/api/perdidos`     | `GET` (público) · `GET ?meus=1` · `GET /:id` · `GET /:id/avistamentos-proximos` · `POST` · `PUT /:id` · `DELETE /:id` |
-| `/api/ongs`         | `GET` (público) · `GET ?minha=1` · `POST` · `PUT /:id` · `DELETE /:id`                                                |
-| `/api/dispositivos` | `GET` · `POST` · `PUT /:id` · `POST /:id/repor` · `POST /:id/chave` · `DELETE /:id`                                   |
-| `/api/deteccoes`    | `POST` (ingestão) · `GET`                                                                                             |
-| `/api/avistamentos` | `GET ?lat&lng&raio_km&desde&ate&especie` · `PATCH /:id/reconhecer`                                                    |
-| `/api/ocorrencias`  | `GET` · `GET /:id` · `POST /:id/assumir` · `PATCH /:id/status` · `DELETE /:id`                                        |
-| `/api/notificacoes` | `GET` · `PATCH /:id/resposta` · `PATCH /:id/lida` · `DELETE /:id`                                                     |
+| Recurso             | Rotas                                                                                                                                    |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `/api/me`           | `GET` · `POST` · `PUT` · `DELETE`                                                                                                        |
+| `/api/pets`         | `GET` · `GET ?cartazes=1` (público) · `GET /:id` · `POST` · `PUT /:id` · `PATCH /:id/modo-perdido` · `PATCH /:id/cartaz` · `DELETE /:id` |
+| `/api/perdidos`     | `GET` (público) · `GET ?meus=1` · `GET /:id` · `GET /:id/avistamentos-proximos` · `POST` · `PUT /:id` · `DELETE /:id`                    |
+| `/api/ongs`         | `GET` (público) · `GET ?minha=1` · `POST` · `PUT /:id` · `DELETE /:id`                                                                   |
+| `/api/dispositivos` | `GET` · `POST` · `PUT /:id` · `POST /:id/repor` · `POST /:id/chave` · `DELETE /:id`                                                      |
+| `/api/deteccoes`    | `POST` (ingestão) · `GET`                                                                                                                |
+| `/api/avistamentos` | `GET ?lat&lng&raio_km&desde&ate&especie` · `PATCH /:id/reconhecer`                                                                       |
+| `/api/ocorrencias`  | `GET` · `GET /:id` · `POST /:id/assumir` · `PATCH /:id/status` · `DELETE /:id`                                                           |
+| `/api/notificacoes` | `GET` · `PATCH /:id/resposta` · `PATCH /:id/lida` · `DELETE /:id`                                                                        |
 
 ### Enviar detecções do ESP32 ou do Python
 
