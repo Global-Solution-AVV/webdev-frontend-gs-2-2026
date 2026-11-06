@@ -5,6 +5,30 @@ import { Campo } from '../components/Campo'
 import { Alerta } from '../components/Alerta'
 import { botao, cartao } from '../lib/estilos'
 
+const CONTAS_DEMO = [
+  {
+    perfil: 'Tutor',
+    emails: [
+      'ana.tutora@devolta.demo',
+      'bruno.tutor@devolta.demo',
+      'carla.tutora@devolta.demo',
+      'diego.tutor@devolta.demo',
+      'elisa.tutora@devolta.demo',
+    ],
+  },
+  {
+    perfil: 'ONG',
+    emails: [
+      'patas@devolta.demo',
+      'abrigo@devolta.demo',
+      'resgate.sul@devolta.demo',
+      'miados@devolta.demo',
+      'lar.leste@devolta.demo',
+    ],
+  },
+  { perfil: 'Coordenação', emails: ['coordenacao@devolta.demo'] },
+]
+
 const INICIO_POR_PAPEL = { tutor: '/tutor', ong: '/ong', coordenacao: '/coordenacao' }
 
 export function Entrar() {
@@ -70,14 +94,22 @@ export function Entrar() {
         <p className="mt-2">
           Senha de todas: <code>devolta123</code>
         </p>
-        <ul className="mt-1 list-inside list-disc">
-          <li>
-            Tutor: ana.tutora · bruno.tutor · carla.tutora · diego.tutor · elisa.tutora
-            (@devolta.demo)
-          </li>
-          <li>ONG: patas · abrigo · resgate.sul · miados · lar.leste (@devolta.demo)</li>
-          <li>Coordenação: coordenacao@devolta.demo</li>
-        </ul>
+        <dl className="mt-3 space-y-3">
+          {CONTAS_DEMO.map(({ perfil, emails }) => (
+            <div key={perfil}>
+              <dt className="font-semibold text-tinta">{perfil}</dt>
+              <dd>
+                <ul className="mt-1 space-y-0.5">
+                  {emails.map((email) => (
+                    <li key={email}>
+                      <code className="break-all">{email}</code>
+                    </li>
+                  ))}
+                </ul>
+              </dd>
+            </div>
+          ))}
+        </dl>
       </details>
     </div>
   )
