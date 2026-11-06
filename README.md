@@ -10,16 +10,16 @@ Aplicação web das disciplinas **Front-end Design** e **Web Development**.
 | Campo                      | Resposta                                                                                                                                                                                                                                                                                                                                 |
 | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Nome da CitizenTech**    | DeVolta                                                                                                                                                                                                                                                                                                                                  |
-| **Cidade e bairro**        | São Paulo · _[bairro a definir pela equipe]_                                                                                                                                                                                                                                                                                             |
+| **Cidade**                 | São Paulo                                                                                                                                                                                                                                                                                                                                |
 | **Cidadão beneficiado**    | Tutores que perderam o pet, ONGs de resgate e a população que convive com animais nas ruas                                                                                                                                                                                                                                               |
 | **Problema, em uma frase** | O microchip do pet só é lido de muito perto e não há como ler na rua, então animais perdidos não voltam para casa e animais abandonados não chegam a quem pode resgatá-los.                                                                                                                                                              |
 | **Como funciona**          | Pontos de identificação reconhecem gato ou cachorro, liberam uma pequena porção (a isca) e leem o microchip enquanto o animal come. Com chip, o tutor é avisado com local e horário. Sem chip, vira avistamento; se o animal volta ao mesmo ponto por 3 dias e ninguém o reconhece, abre uma ocorrência para as ONGs da região com vaga. |
 | **O que cada parte faz**   | **Web/Front-end (este repositório):** plataforma para tutores, ONGs, público e coordenação · **Python:** central de decisões com JSON · **Edge (ESP32/Wokwi):** o ponto de identificação · **Matemática:** porção mínima, área de busca e melhor horário de resgate · **UX:** requisitos e jornada · **Pitch:** história e negócio       |
 | **Link do repositório**    | https://github.com/Global-Solution-AVV/webdev-frontend-gs-2-2026                                                                                                                                                                                                                                                                         |
-| **Indicador de impacto**   | _[a definir pela equipe]_                                                                                                                                                                                                                                                                                                                |
+| **Indicador de impacto**   | **Animais que voltaram para casa ou foram resgatados por mês** (pets com chip encontrados + perdidos sem chip encontrados + ocorrências encaminhadas ao tutor ou resgatadas por ONGs), acompanhado do **tempo médio até o reencontro** (dias entre "desaparecido desde" e "encontrado em"; meta: menos dias que o cartaz de papel)       |
 | **ODS conectados**         | 3 (saúde e zoonoses), 11 (cidades sustentáveis), 15 (vida terrestre), 17 (parcerias)                                                                                                                                                                                                                                                     |
 
-**Deploy:** _[link da Vercel após o deploy]_
+**Deploy:** https://devolta-avv.vercel.app
 
 ## Funcionalidades
 
@@ -170,9 +170,11 @@ As chaves `dv_demo_*` existem só nos dados de demonstração; gere chaves reais
 
 ## Integrantes
 
-| Nome            | RM              |
-| --------------- | --------------- |
-| _[a preencher]_ | _[a preencher]_ |
+| Nome                           | RM       |
+| ------------------------------ | -------- |
+| Artur Fabi Brandi              | RM570258 |
+| Victor Bertacchini De Godoy    | RM571454 |
+| Victor Lula Heineken Rodrigues | RM570782 |
 
 ## Uso de IA
 
