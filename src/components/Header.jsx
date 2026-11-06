@@ -6,10 +6,13 @@ import { PAPEIS } from '../lib/formatos'
 import { botao, botaoIcone } from '../lib/estilos'
 
 const LINKS = {
-  publico: [{ para: '/mapa', texto: 'Mapa' }],
+  publico: [
+    { para: '/mapa', texto: 'Mapa' },
+    { para: '/cartazes', texto: 'Animais perdidos' },
+  ],
   tutor: [
     { para: '/tutor', texto: 'Meus pets', fim: true },
-    { para: '/tutor/perdidos', texto: 'Animais perdidos' },
+    { para: '/tutor/perdidos', texto: 'Perdidos sem chip' },
   ],
   ong: [
     { para: '/ong', texto: 'Ocorrências', fim: true },
@@ -70,7 +73,7 @@ export function Header() {
         <nav
           id="menu-principal"
           aria-label="Principal"
-          className={`${menuAberto ? 'block' : 'hidden'} absolute left-0 right-0 top-full border-b border-creme-escuro bg-creme px-4 pb-4 md:static md:block md:border-0 md:p-0`}
+          className={`${menuAberto ? 'block' : 'hidden'} absolute left-0 right-0 top-full border-b border-creme-escuro bg-creme px-4 pb-4 md:static md:block md:border-0 md:bg-transparent md:p-0`}
         >
           <ul className="flex flex-col gap-1 md:flex-row md:items-center">
             {links.map((l) => (

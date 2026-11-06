@@ -1,5 +1,14 @@
 import { Link } from 'react-router'
-import { ArrowRight, Camera, HandHeart, House, MapPin, PawPrint, Utensils } from 'lucide-react'
+import {
+  ArrowRight,
+  Camera,
+  HandHeart,
+  House,
+  MapPin,
+  Megaphone,
+  PawPrint,
+  Utensils,
+} from 'lucide-react'
 import { PainelMapaPublico } from '../components/PainelMapaPublico'
 import { useAuth } from '../hooks/useAuth'
 import { botao, cartao, selo } from '../lib/estilos'
@@ -21,7 +30,7 @@ const PASSOS = [
     icone: House,
     titulo: 'Com chip, o tutor é avisado',
     texto:
-      'O sistema manda a mensagem com o local e o horário. O telefone do tutor nunca aparece para ninguém.',
+      'O sistema manda a mensagem com o local e o horário. O telefone do tutor só fica público se ele publicar um cartaz de animal perdido.',
   },
   {
     icone: HandHeart,
@@ -67,6 +76,10 @@ export function Inicio() {
                 </Link>
               </>
             )}
+            <Link to="/cartazes" className={botao.secundario}>
+              <Megaphone aria-hidden="true" size={18} />
+              Animais perdidos
+            </Link>
             <Link to="/mapa" className={botao.fantasma}>
               Ver o mapa
               <ArrowRight aria-hidden="true" size={18} />

@@ -5,6 +5,7 @@ import { Footer } from './components/Footer'
 import { RotaProtegida } from './components/RotaProtegida'
 import { Inicio } from './pages/Inicio'
 import { MapaPublico } from './pages/MapaPublico'
+import { Cartazes } from './pages/Cartazes'
 import { PerdidoDetalhe } from './pages/PerdidoDetalhe'
 import { Entrar } from './pages/Entrar'
 import { Cadastrar } from './pages/Cadastrar'
@@ -49,6 +50,7 @@ export default function App() {
           <Route element={<Layout />}>
             <Route index element={<Inicio />} />
             <Route path="mapa" element={<MapaPublico />} />
+            <Route path="cartazes" element={<Cartazes />} />
             <Route path="perdidos/:id" element={<PerdidoDetalhe />} />
             <Route path="entrar" element={<Entrar />} />
             <Route path="cadastrar" element={<Cadastrar />} />
