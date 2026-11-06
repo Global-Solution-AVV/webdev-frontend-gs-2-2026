@@ -2,7 +2,10 @@
 // Uso: node --env-file=.env scripts/seed.js   (ou: npm run seed)
 // Rode o supabase/schema.sql antes. O script pode ser rodado de novo: ele apaga e recria os dados de demo.
 //
-// Cenários cobertos (todos os 12 pontos têm leituras COM chip e avistamentos SEM chip):
+// Volume: 30 tutores (5 com login divulgado + 25 extras), 50 pets com chip (10 perdidos com
+// cartaz público e 7 encontrados), 12 pontos com leituras COM chip e avistamentos SEM chip.
+//
+// Cenários cobertos:
 // - ocorrências em todos os status: aberta, em atendimento, reserva vencida (reabre ao ler),
 //   resgatado, não encontrado e encaminhado ao tutor;
 // - DV-003 a um dia de abrir ocorrência (simule um cachorro sem chip hoje para ver abrir);
@@ -128,6 +131,50 @@ const ONGS = [
   },
 ]
 
+const FOTOS_GATO = ['millie', 'neo', 'bella', 'poppy', 'louie', 'neo_banana'].map(
+  (n) => `https://placecats.com/${n}/300/200`,
+)
+
+// Tutores extras: só para dar volume aos dados (não aparecem na tela de login, mas entram
+// com a mesma senha). E-mails tutor06@devolta.demo ... tutor30@devolta.demo.
+const TUTORES_EXTRAS = [
+  ['Fernanda Lima', 'a'],
+  ['Gustavo Rocha', 'o'],
+  ['Helena Prado', 'a'],
+  ['Igor Mendes', 'o'],
+  ['Juliana Castro', 'a'],
+  ['Kleber Nunes', 'o'],
+  ['Larissa Duarte', 'a'],
+  ['Marcos Teixeira', 'o'],
+  ['Natália Freitas', 'a'],
+  ['Otávio Ramos', 'o'],
+  ['Patrícia Vieira', 'a'],
+  ['Rafael Moura', 'o'],
+  ['Sabrina Lopes', 'a'],
+  ['Thiago Barros', 'o'],
+  ['Vanessa Pires', 'a'],
+  ['Wagner Cardoso', 'o'],
+  ['Yasmin Farias', 'a'],
+  ['André Correia', 'o'],
+  ['Beatriz Moraes', 'a'],
+  ['Caio Fernandes', 'o'],
+  ['Débora Campos', 'a'],
+  ['Eduardo Rezende', 'o'],
+  ['Flávia Antunes', 'a'],
+  ['Gabriel Siqueira', 'o'],
+  ['Isabela Monteiro', 'a'],
+].map(([nome, g], i) => {
+  const n = String(i + 6).padStart(2, '0')
+  return {
+    email: `tutor${n}@devolta.demo`,
+    nome: `${nome} (fictíci${g})`,
+    papel: 'tutor',
+    telefone: `(11) 90000-00${n}`,
+    extra: true,
+  }
+})
+USUARIOS.push(...TUTORES_EXTRAS)
+
 // Pets com chip. modo_perdido = tutor avisou que sumiu → cada leitura vira alerta imediato.
 const PETS = [
   {
@@ -143,6 +190,12 @@ const PETS = [
     nome: 'Paçoca',
     especie: 'cachorro',
     perdido: true,
+    // Cartaz público: [dias atrás que sumiu, dias atrás que foi encontrado | null, texto]
+    cartaz: [
+      2,
+      null,
+      'Caramelo de porte médio, coleira azul. Fugiu perto da Av. Paulista e é medroso.',
+    ],
     foto: 'https://placedog.net/300/200?id=12',
   },
   {
@@ -150,6 +203,7 @@ const PETS = [
     tutor: 'bruno.tutor',
     nome: 'Thor',
     especie: 'cachorro',
+    cartaz: [12, 9, 'Preto com peito branco, atende pelo nome.'],
     foto: 'https://placedog.net/300/200?id=21',
   },
   {
@@ -157,6 +211,7 @@ const PETS = [
     tutor: 'carla.tutora',
     nome: 'Nina',
     especie: 'gato',
+    cartaz: [7, 5, 'Gata cinza rajada, olhos verdes.'],
     foto: 'https://placecats.com/neo/300/200',
   },
   {
@@ -172,6 +227,7 @@ const PETS = [
     nome: 'Frida',
     especie: 'gato',
     perdido: true,
+    cartaz: [4, null, 'Tricolor, castrada, muito mansa. Sumiu na região da Vila Mariana.'],
     foto: 'https://placecats.com/bella/300/200',
   },
   {
@@ -183,6 +239,116 @@ const PETS = [
   },
   { apelido: 'tobias', tutor: 'elisa.tutora', nome: 'Tobias', especie: 'cachorro', foto: null },
 ]
+
+// Pets dos tutores extras: [nome, espécie, situação do cartaz, texto do cartaz].
+// Situação: null (nunca se perdeu) · ['perdido', dias que sumiu] · ['encontrado', sumiu, voltou].
+// Os 17 primeiros tutores extras têm 2 pets; os outros 8, um pet cada.
+const PETS_EXTRAS = [
+  [
+    'Amora',
+    'gato',
+    ['perdido', 3],
+    'Preta com uma mancha branca no peito. Fugiu pela janela na Bela Vista.',
+  ],
+  ['Bento', 'cachorro', null],
+  [
+    'Cacau',
+    'cachorro',
+    ['perdido', 6],
+    'Marrom, porte pequeno, coleira vermelha com plaquinha. Sumiu perto da Aclimação.',
+  ],
+  ['Dengo', 'gato', null],
+  ['Estrela', 'gato', ['encontrado', 15, 11], 'Branca com olhos azuis, surda.'],
+  ['Fubá', 'cachorro', null],
+  [
+    'Godofredo',
+    'cachorro',
+    ['perdido', 9],
+    'Basset idoso, anda devagar e precisa de remédio. Visto pela última vez em Pinheiros.',
+  ],
+  ['Jade', 'gato', null],
+  ['Kiko', 'cachorro', null],
+  ['Lola', 'cachorro', ['encontrado', 20, 17], 'Poodle branca, tosa recente.'],
+  ['Mel', 'gato', null],
+  [
+    'Nescau',
+    'cachorro',
+    ['perdido', 4],
+    'Vira-lata chocolate, muito brincalhão. Escapou no Tatuapé durante um passeio.',
+  ],
+  ['Olívia', 'gato', null],
+  ['Pingo', 'cachorro', null],
+  [
+    'Quindim',
+    'gato',
+    ['perdido', 12],
+    'Laranja, gordinho e dócil. Some às vezes, mas nunca por tanto tempo. Região da Mooca.',
+  ],
+  ['Rex', 'cachorro', null],
+  ['Sushi', 'gato', ['encontrado', 9, 6], 'Siamês, mia muito alto.'],
+  ['Tequila', 'cachorro', null],
+  ['Uva', 'gato', null],
+  [
+    'Valente',
+    'cachorro',
+    ['perdido', 5],
+    'Pastor alemão jovem, usa coleira de couro. Fugiu com medo de fogos em Santana.',
+  ],
+  ['Xodó', 'gato', null],
+  ['Zeca', 'cachorro', null],
+  ['Biscoito', 'cachorro', ['encontrado', 6, 4], 'Beagle tricolor, atende pelo nome.'],
+  ['Canela', 'gato', null],
+  ['Duque', 'cachorro', null],
+  [
+    'Faísca',
+    'gato',
+    ['perdido', 7],
+    'Rajada de cinza, rabo curto. Sumiu na Vila Mariana, perto da clínica.',
+  ],
+  ['Gaia', 'cachorro', null],
+  ['Hulk', 'cachorro', null],
+  ['Iara', 'gato', ['encontrado', 25, 21], 'Persa creme, pelo longo.'],
+  ['Juca', 'cachorro', null],
+  ['Lua', 'gato', null],
+  [
+    'Max',
+    'cachorro',
+    ['perdido', 3],
+    'Labrador amarelo, castrado, muito amigável. Visto pela última vez no Butantã.',
+  ],
+  ['Nala', 'gato', null],
+  ['Oreo', 'cachorro', null],
+  ['Pandora', 'gato', null],
+  ['Rajada', 'gato', null],
+  ['Simba', 'gato', null],
+  ['Tapioca', 'cachorro', null],
+  ['Bolinha', 'cachorro', null],
+  ['Fumaça', 'gato', null],
+  ['Pretinha', 'cachorro', null],
+  ['Chico', 'cachorro', null],
+]
+let fotoPetN = 0
+PETS.push(
+  ...PETS_EXTRAS.map(([nome, especie, sit, texto], k) => {
+    const dono = k < 34 ? Math.floor(k / 2) : k - 17
+    fotoPetN++
+    return {
+      apelido: `extra${k}`,
+      tutor: TUTORES_EXTRAS[dono].email.split('@')[0],
+      nome,
+      especie,
+      perdido: sit?.[0] === 'perdido',
+      cartaz: sit ? [sit[1], sit[0] === 'encontrado' ? sit[2] : null, texto] : undefined,
+      // Alguns sem foto, como na vida real.
+      foto:
+        k % 9 === 8
+          ? null
+          : especie === 'gato'
+            ? FOTOS_GATO[fotoPetN % FOTOS_GATO.length]
+            : `https://placedog.net/300/200?id=${60 + k}`,
+    }
+  }),
+)
 
 // ---------------------------------------------------------------- pontos
 
@@ -322,6 +488,13 @@ const AVISTAMENTOS_SOLTOS = {
   'DV-012': [['gato', 5, 17, 0]],
 }
 
+// Mais avistamentos em todos os pontos, de 8 a 17 dias atrás (não formam 3 dias seguidos).
+DISPOSITIVOS.forEach((d, i) => {
+  const [a, b] = i % 2 ? ['gato', 'cachorro'] : ['cachorro', 'gato']
+  AVISTAMENTOS_SOLTOS[d.codigo].push([a, 8 + (i % 4), 19, 10 * (i % 6)])
+  AVISTAMENTOS_SOLTOS[d.codigo].push([b, 13 + (i % 5), 7, 5 * (i % 10)])
+})
+
 // Leituras COM chip: [ponto, pet, dias atrás, hora, minuto, resposta do tutor, lida].
 const LEITURAS_CHIP = [
   ['DV-001', 'mingau', 3, 9, 10, 'ok', true],
@@ -341,6 +514,22 @@ const LEITURAS_CHIP = [
   ['DV-011', 'frida', 8, 20, 30, null, true],
   ['DV-012', 'pipoca', 2, 18, 0, null, true],
 ]
+
+// Leituras dos pets extras, espalhadas pelos 12 pontos. Perdidos: 2 alertas depois do sumiço.
+// Os outros: 1 aviso (e um 2º, em outro dia, para 1 em cada 3), respeitando 1 aviso por dia.
+PETS_EXTRAS.forEach(([, , sit], k) => {
+  const cod = (n) => `DV-${String((n % 12) + 1).padStart(3, '0')}`
+  const h = 6 + ((k * 7) % 15)
+  const m = (k * 13) % 60
+  if (sit?.[0] === 'perdido') {
+    LEITURAS_CHIP.push([cod(k), `extra${k}`, 2, h, m, null, true])
+    LEITURAS_CHIP.push([cod(k + 5), `extra${k}`, 1, (h + 3) % 24, m, null, false])
+    return
+  }
+  const dias = 1 + (k % 5)
+  LEITURAS_CHIP.push([cod(k * 5), `extra${k}`, dias, h, m, dias === 1 ? null : 'ok', dias !== 1])
+  if (k % 3 === 0) LEITURAS_CHIP.push([cod(k * 5 + 7), `extra${k}`, dias + 3, h, m, 'ok', true])
+})
 
 // Leituras descartadas (o filtro de categoria barra) e um chip sem cadastro.
 const DESCARTADAS = [
@@ -716,9 +905,14 @@ async function main() {
           tutor_id: idTutor(p.tutor),
           nome: p.nome,
           especie: p.especie,
-          chip: `98102000000000${i + 1}`,
+          chip: `981020000000${String(i + 1).padStart(3, '0')}`,
           foto_url: p.foto,
           modo_perdido: Boolean(p.perdido),
+          // Todas as linhas com as mesmas chaves (o insert em lote grava null nas que faltam).
+          cartaz_publico: Boolean(p.cartaz),
+          cartaz_descricao: p.cartaz?.[2] ?? null,
+          perdido_desde: p.cartaz ? emSP(p.cartaz[0], 18, 0) : null,
+          encontrado_em: p.cartaz?.[1] != null ? emSP(p.cartaz[1], 10, 30) : null,
         })),
       )
       .select(),
@@ -928,12 +1122,17 @@ async function main() {
   const { count: nDet } = await db.from('deteccoes').select('id', { count: 'exact', head: true })
 
   console.log('\nPronto! Contas de demonstração (senha: %s):', SENHA)
-  for (const u of USUARIOS) console.log(`  ${u.papel.padEnd(12)} ${u.email}`)
+  for (const u of USUARIOS.filter((x) => !x.extra)) {
+    console.log(`  ${u.papel.padEnd(12)} ${u.email}`)
+  }
+  console.log(`  + ${TUTORES_EXTRAS.length} tutores extras (tutor06 a tutor30@devolta.demo)`)
   console.log(
     '\nChaves de API dos pontos (cabeçalho X-Device-Key): dv_demo_<código>, ex.: dv_demo_DV-001',
   )
   console.log(
-    `\n${DISPOSITIVOS.length} pontos · ${ONGS.length} ONGs · ${PETS.length} pets com chip · ` +
+    `\n${DISPOSITIVOS.length} pontos · ${ONGS.length} ONGs · ${PETS.length} pets com chip ` +
+      `(${PETS.filter((p) => p.perdido).length} perdidos, ` +
+      `${PETS.filter((p) => p.cartaz?.[1] != null).length} encontrados) · ` +
       `${PERDIDOS.length} animais perdidos · ${OCORRENCIAS.length} ocorrências · ` +
       `${nAv} avistamentos · ${nDet} detecções · ${LEITURAS_CHIP.length} avisos a tutores`,
   )
