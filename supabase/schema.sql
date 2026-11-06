@@ -51,8 +51,39 @@ create table if not exists pets (
   foto_url text,
   modo_perdido boolean not null default false,
   ultimo_aviso_em timestamptz,
+  -- Cartaz público (aba /cartazes): só aparece se o tutor autorizar; aí o telefone dele fica visível.
+  cartaz_publico boolean not null default false,
+  cartaz_descricao text,
+  perdido_desde timestamptz,  -- preenchido pelo gatilho quando o modo perdido liga
+  encontrado_em timestamptz,  -- preenchido pelo gatilho quando o modo perdido desliga
   criado_em timestamptz not null default now()
 );
+
+-- Marca as datas do cartaz sempre que o modo perdido muda, venha de onde vier.
+create or replace function public.datas_modo_perdido()
+returns trigger language plpgsql as $$
+begin
+  if tg_op = 'INSERT' then
+    if new.modo_perdido then
+      new.perdido_desde := coalesce(new.perdido_desde, now());
+      new.encontrado_em := null;
+    end if;
+  elsif new.modo_perdido is distinct from old.modo_perdido then
+    if new.modo_perdido then
+      new.perdido_desde := now();
+      new.encontrado_em := null;
+    elsif old.perdido_desde is not null then
+      new.encontrado_em := now();
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists ao_mudar_modo_perdido on pets;
+create trigger ao_mudar_modo_perdido
+  before insert or update of modo_perdido on pets
+  for each row execute function public.datas_modo_perdido();
 
 -- ---------- Animais perdidos (sem chip) ----------
 create table if not exists animais_perdidos (
@@ -164,6 +195,7 @@ create table if not exists notificacoes (
 
 -- ---------- Índices ----------
 create index if not exists idx_pets_tutor on pets (tutor_id);
+create index if not exists idx_pets_cartaz on pets (cartaz_publico) where cartaz_publico;
 create index if not exists idx_perdidos_tutor on animais_perdidos (tutor_id);
 create index if not exists idx_perdidos_status on animais_perdidos (status);
 create index if not exists idx_deteccoes_disp on deteccoes (dispositivo_id, criado_em desc);
