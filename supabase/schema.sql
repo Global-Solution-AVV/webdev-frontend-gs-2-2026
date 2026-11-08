@@ -120,10 +120,7 @@ create table if not exists dispositivos (
   local_nome text not null,
   lat double precision not null,
   lng double precision not null,
-  estoque_g integer not null default 0 check (estoque_g >= 0),
-  estoque_minimo_g integer not null default 500 check (estoque_minimo_g >= 0),
   limite_porcoes_dia integer not null default 10 check (limite_porcoes_dia >= 0),
-  porcao_g integer not null default 20 check (porcao_g > 0),
   status text not null default 'ativo' check (status in ('ativo', 'manutencao', 'inativo')),
   api_key_hash text,
   criado_em timestamptz not null default now()
@@ -141,6 +138,28 @@ create table if not exists deteccoes (
   porcao_liberada boolean not null default false,
   criado_em timestamptz not null default now()
 );
+
+-- ---------- Leituras do sensor (nível do silo, temperatura, umidade) ----------
+-- O estoque não é editado à mão: o nível de ração vem só destas leituras.
+create table if not exists leituras_dispositivo (
+  id uuid primary key default gen_random_uuid(),
+  dispositivo_id uuid not null references dispositivos (id) on delete cascade,
+  medido_em timestamptz not null default now(),
+  nivel_silo_pct numeric(5, 1) check (nivel_silo_pct between 0 and 100),
+  temperatura_c numeric(4, 1) check (temperatura_c between -40 and 80),
+  umidade_pct numeric(4, 1) check (umidade_pct between 0 and 100),
+  estado text,
+  criado_em timestamptz not null default now()
+);
+
+create index if not exists leituras_dispositivo_recentes
+  on leituras_dispositivo (dispositivo_id, medido_em desc);
+
+-- Leitura mais recente de cada ponto.
+create or replace view ultima_leitura_dispositivo with (security_invoker = true) as
+select distinct on (dispositivo_id) *
+from leituras_dispositivo
+order by dispositivo_id, medido_em desc;
 
 -- ---------- Ocorrências de resgate ----------
 create table if not exists ocorrencias (
@@ -212,7 +231,9 @@ alter table animais_perdidos enable row level security;
 alter table ongs enable row level security;
 alter table dispositivos enable row level security;
 alter table deteccoes enable row level security;
+alter table leituras_dispositivo enable row level security;
 alter table ocorrencias enable row level security;
 alter table ocorrencia_historico enable row level security;
 alter table avistamentos enable row level security;
 alter table notificacoes enable row level security;
+revoke all on ultima_leitura_dispositivo from anon, authenticated;

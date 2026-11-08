@@ -1,5 +1,6 @@
 import { CATEGORIAS_ACEITAS } from '../config.js'
 import { mesmoDiaSP } from './datas.js'
+import { siloVazio } from './leituras.js'
 
 /**
  * Regra 1: filtra a detecção.
@@ -25,14 +26,15 @@ export function avaliarDeteccao({ categoria, confidence }, confidenceMinima) {
 
 /**
  * Regra 2: decide se o dispositivo pode liberar a porção.
+ * O estoque vem da última leitura do sensor (sem leitura, não bloqueia).
  * @returns {{ liberar: boolean, motivo?: string }}
  */
-export function podeLiberarPorcao(dispositivo, porcoesHoje) {
+export function podeLiberarPorcao(dispositivo, porcoesHoje, ultimaLeitura = null) {
   if (dispositivo.status !== 'ativo') {
     return { liberar: false, motivo: `Dispositivo em ${dispositivo.status}` }
   }
-  if (dispositivo.estoque_g < dispositivo.porcao_g) {
-    return { liberar: false, motivo: 'Estoque de ração esgotado' }
+  if (siloVazio(ultimaLeitura)) {
+    return { liberar: false, motivo: 'Silo vazio na última leitura do sensor' }
   }
   if (porcoesHoje >= dispositivo.limite_porcoes_dia) {
     return { liberar: false, motivo: 'Limite de porções do dia atingido' }
@@ -50,8 +52,4 @@ export function decidirNotificacao(pet, agora = new Date()) {
   if (pet.modo_perdido) return 'imediato'
   if (pet.ultimo_aviso_em && mesmoDiaSP(pet.ultimo_aviso_em, agora)) return null
   return 'diario'
-}
-
-export function estoqueBaixo(dispositivo) {
-  return dispositivo.estoque_g < dispositivo.estoque_minimo_g
 }

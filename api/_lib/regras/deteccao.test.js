@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { avaliarDeteccao, podeLiberarPorcao, decidirNotificacao, estoqueBaixo } from './deteccao.js'
+import { avaliarDeteccao, podeLiberarPorcao, decidirNotificacao } from './deteccao.js'
 
 // Valor usado só nos testes; o valor real ainda será alinhado com Python e Edge.
 const MINIMA = 0.8
@@ -25,13 +25,14 @@ describe('avaliarDeteccao', () => {
 })
 
 describe('podeLiberarPorcao', () => {
-  const disp = { status: 'ativo', estoque_g: 1000, porcao_g: 20, limite_porcoes_dia: 5 }
-  it('libera quando tudo está ok', () => {
-    expect(podeLiberarPorcao(disp, 0).liberar).toBe(true)
+  const disp = { status: 'ativo', limite_porcoes_dia: 5 }
+  it('libera quando tudo está ok, inclusive sem nenhuma leitura do sensor', () => {
+    expect(podeLiberarPorcao(disp, 0, { nivel_silo_pct: 60 }).liberar).toBe(true)
+    expect(podeLiberarPorcao(disp, 0, null).liberar).toBe(true)
   })
-  it('bloqueia dispositivo fora de operação, sem estoque ou no limite do dia', () => {
+  it('bloqueia dispositivo fora de operação, silo vazio na última leitura ou no limite do dia', () => {
     expect(podeLiberarPorcao({ ...disp, status: 'manutencao' }, 0).liberar).toBe(false)
-    expect(podeLiberarPorcao({ ...disp, estoque_g: 10 }, 0).liberar).toBe(false)
+    expect(podeLiberarPorcao(disp, 0, { nivel_silo_pct: 3 }).liberar).toBe(false)
     expect(podeLiberarPorcao(disp, 5).liberar).toBe(false)
   })
 })
@@ -53,12 +54,5 @@ describe('decidirNotificacao', () => {
     // 02:30 UTC do dia 11 ainda é dia 10 em SP
     const pet = { modo_perdido: false, ultimo_aviso_em: '2026-11-10T12:00:00-03:00' }
     expect(decidirNotificacao(pet, new Date('2026-11-11T02:30:00Z'))).toBe(null)
-  })
-})
-
-describe('estoqueBaixo', () => {
-  it('alerta abaixo do mínimo', () => {
-    expect(estoqueBaixo({ estoque_g: 400, estoque_minimo_g: 500 })).toBe(true)
-    expect(estoqueBaixo({ estoque_g: 500, estoque_minimo_g: 500 })).toBe(false)
   })
 })

@@ -36,25 +36,23 @@ async function registrarDeteccao(dispositivo, entrada, resultado, motivo, porcao
   )
 }
 
+// O nível de ração vem da última leitura do sensor; não há estoque para descontar.
 async function liberarPorcao(dispositivo, horario) {
   const db = supabaseAdmin()
-  const { count } = await db
-    .from('deteccoes')
-    .select('id', { count: 'exact', head: true })
-    .eq('dispositivo_id', dispositivo.id)
-    .eq('porcao_liberada', true)
-    .gte('criado_em', inicioDoDiaSP(horario).toISOString())
-  const decisao = podeLiberarPorcao(dispositivo, count ?? 0)
-  if (decisao.liberar) {
-    checar(
-      await db
-        .from('dispositivos')
-        .update({ estoque_g: Math.max(0, dispositivo.estoque_g - dispositivo.porcao_g) })
-        .eq('id', dispositivo.id),
-      'Estoque',
-    )
-  }
-  return decisao
+  const [{ count }, { data: ultimaLeitura }] = await Promise.all([
+    db
+      .from('deteccoes')
+      .select('id', { count: 'exact', head: true })
+      .eq('dispositivo_id', dispositivo.id)
+      .eq('porcao_liberada', true)
+      .gte('criado_em', inicioDoDiaSP(horario).toISOString()),
+    db
+      .from('ultima_leitura_dispositivo')
+      .select('nivel_silo_pct')
+      .eq('dispositivo_id', dispositivo.id)
+      .maybeSingle(),
+  ])
+  return podeLiberarPorcao(dispositivo, count ?? 0, ultimaLeitura)
 }
 
 async function avisarTutor(pet, dispositivo, horario) {
