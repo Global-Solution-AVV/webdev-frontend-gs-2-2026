@@ -1,22 +1,35 @@
 import { useState } from 'react'
 import { useDispositivos } from '../../hooks/useDispositivos'
+import { usePontosAoVivo } from '../../hooks/usePontosAoVivo'
 import { FormDispositivo } from '../../components/FormDispositivo'
 import { Modal } from '../../components/Modal'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { BadgeStatus } from '../../components/BadgeStatus'
 import { Mapa, LegendaMapa } from '../../components/Mapa'
-import { Campo } from '../../components/Campo'
 import { Carregando } from '../../components/Carregando'
 import { EstadoVazio } from '../../components/EstadoVazio'
 import { Alerta } from '../../components/Alerta'
+import { PainelAoVivo } from '../../components/PainelAoVivo'
+import { LeituraSensor } from '../../components/LeituraSensor'
+import { HistoricoLeituras } from '../../components/HistoricoLeituras'
+import { dataHora } from '../../lib/formatos'
+import { motivosDeAtencao } from '../../lib/telemetria'
 import { botao, cartao } from '../../lib/estilos'
 
-/** Gestão dos pontos de identificação e do estoque de ração (coordenação). */
+/** Gestão dos pontos de identificação e leitura do sensor de cada um (ao vivo ou a última gravada). */
 export function CoordDispositivos() {
   const d = useDispositivos()
-  const [modal, setModal] = useState(null) // { tipo: 'novo'|'editar'|'repor'|'chave', dispositivo }
+  const aoVivo = usePontosAoVivo()
+  // Uma leitura por ponto, de uma fonte só: ao vivo se online, senão a última gravada.
+  const linhas = d.dispositivos.map((x) => ({
+    ...x,
+    ...aoVivo.doPonto(x.codigo, x.ultima_leitura),
+  }))
+  const emAtencao = linhas
+    .map((x) => ({ codigo: x.codigo, motivos: motivosDeAtencao(x.leitura) }))
+    .filter((x) => x.motivos.length > 0)
+  const [modal, setModal] = useState(null) // { tipo: 'novo'|'editar'|'historico'|'chave', dispositivo }
   const [paraExcluir, setParaExcluir] = useState(null)
-  const [quantidade, setQuantidade] = useState('1000')
   const [chaveGerada, setChaveGerada] = useState(null)
   const [erroAcao, setErroAcao] = useState(null)
   const [enviando, setEnviando] = useState(false)
@@ -51,7 +64,7 @@ export function CoordDispositivos() {
         <div>
           <h1 className="text-3xl font-semibold">Pontos de identificação</h1>
           <p className="text-stone-700">
-            Dispositivos instalados nos parceiros e o estoque de ração de cada um.
+            Dispositivos instalados nos parceiros e o nível de ração que o sensor de cada um mede.
           </p>
         </div>
         <button type="button" className={botao.primario} onClick={() => setModal({ tipo: 'novo' })}>
@@ -59,14 +72,15 @@ export function CoordDispositivos() {
         </button>
       </div>
 
-      {d.comEstoqueBaixo.length > 0 && (
+      {emAtencao.length > 0 && (
         <Alerta tipo="aviso">
-          <strong>Estoque baixo:</strong>{' '}
-          {d.comEstoqueBaixo.map((x) => `${x.codigo} (${x.estoque_g} g)`).join(', ')}. Programe a
-          reposição.
+          <strong>Atenção:</strong>{' '}
+          {emAtencao.map((x) => `${x.codigo} (${x.motivos.join(', ')})`).join('; ')}.
         </Alerta>
       )}
       <Alerta tipo="erro">{d.erro}</Alerta>
+
+      <PainelAoVivo conexao={aoVivo.conexao} eventos={aoVivo.eventos} />
 
       <div className={cartao}>
         <Mapa
@@ -91,7 +105,7 @@ export function CoordDispositivos() {
         <EstadoVazio titulo="Nenhum ponto cadastrado" />
       ) : (
         <div className="overflow-x-auto rounded-xl border border-stone-200 bg-white">
-          <table className="w-full min-w-[48rem] text-left">
+          <table className="w-full min-w-[52rem] text-left">
             <caption className="sr-only">Lista de pontos de identificação</caption>
             <thead className="bg-stone-100 text-sm uppercase text-stone-700">
               <tr>
@@ -102,10 +116,10 @@ export function CoordDispositivos() {
                   Status
                 </th>
                 <th scope="col" className="px-4 py-3">
-                  Estoque
+                  Porções hoje
                 </th>
                 <th scope="col" className="px-4 py-3">
-                  Porções hoje
+                  Leitura do sensor
                 </th>
                 <th scope="col" className="px-4 py-3">
                   Ações
@@ -113,11 +127,7 @@ export function CoordDispositivos() {
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-200">
-              {d.dispositivos.map((x) => {
-                const pct = Math.min(
-                  100,
-                  Math.round((x.estoque_g / Math.max(x.estoque_minimo_g * 4, 1)) * 100),
-                )
+              {linhas.map((x) => {
                 return (
                   <tr key={x.id}>
                     <td className="px-4 py-3">
@@ -126,29 +136,26 @@ export function CoordDispositivos() {
                     </td>
                     <td className="px-4 py-3">
                       <BadgeStatus tipo="dispositivo" status={x.status} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className={x.estoque_baixo ? 'font-bold text-rose-800' : ''}>
-                        {x.estoque_g} g {x.estoque_baixo && '· baixo'}
+                      <p className="mt-1.5 text-sm text-stone-600">
+                        {x.leitura
+                          ? `Última medição: ${dataHora(x.leitura.medidoEm)}`
+                          : 'Nenhuma medição ainda'}
                       </p>
-                      <div className="mt-1 h-2 w-32 rounded bg-stone-200" aria-hidden="true">
-                        <div
-                          className={`h-2 rounded ${x.estoque_baixo ? 'bg-rose-600' : 'bg-marca-600'}`}
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
                     </td>
                     <td className="px-4 py-3">
                       {x.porcoes_hoje} / {x.limite_porcoes_dia}
+                    </td>
+                    <td className="px-4 py-3">
+                      <LeituraSensor situacao={x.situacao} leitura={x.leitura} />
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
                         <button
                           type="button"
                           className={botao.fantasma}
-                          onClick={() => setModal({ tipo: 'repor', dispositivo: x })}
+                          onClick={() => setModal({ tipo: 'historico', dispositivo: x })}
                         >
-                          Repor
+                          Histórico
                         </button>
                         <button
                           type="button"
@@ -199,36 +206,11 @@ export function CoordDispositivos() {
       </Modal>
 
       <Modal
-        aberto={modal?.tipo === 'repor'}
-        titulo={`Repor ração · ${modal?.dispositivo?.codigo}`}
+        aberto={modal?.tipo === 'historico'}
+        titulo={`Histórico de leituras · ${modal?.dispositivo?.codigo}`}
         aoFechar={fechar}
       >
-        <form
-          className="space-y-4"
-          onSubmit={(e) => {
-            e.preventDefault()
-            executar(async () => {
-              await d.repor(modal.dispositivo.id, Number(quantidade))
-              fechar()
-            })
-          }}
-        >
-          <p>
-            Estoque atual: <strong>{modal?.dispositivo?.estoque_g} g</strong>
-          </p>
-          <Campo
-            rotulo="Quantidade a adicionar (g)"
-            type="number"
-            min="1"
-            value={quantidade}
-            onChange={(e) => setQuantidade(e.target.value)}
-            required
-          />
-          <Alerta tipo="erro">{erroAcao}</Alerta>
-          <button type="submit" className={botao.primario} disabled={enviando}>
-            Confirmar reposição
-          </button>
-        </form>
+        <HistoricoLeituras dispositivoId={modal?.dispositivo?.id} />
       </Modal>
 
       <Modal

@@ -9,10 +9,7 @@ const PADRAO = {
   local_nome: '',
   lat: '',
   lng: '',
-  estoque_g: '2000',
-  estoque_minimo_g: '500',
   limite_porcoes_dia: '10',
-  porcao_g: '20',
   status: 'ativo',
 }
 
@@ -55,46 +52,16 @@ export function FormDispositivo({ inicial, aoSalvar, aoCancelar }) {
         maxLength={120}
         dica="Ex.: Clínica veterinária parceira · Rua tal"
       />
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Campo
-          rotulo="Estoque atual (g)"
-          type="number"
-          min="0"
-          name="estoque_g"
-          value={valores.estoque_g}
-          onChange={alterar}
-          required
-        />
-        <Campo
-          rotulo="Estoque mínimo (g)"
-          type="number"
-          min="0"
-          name="estoque_minimo_g"
-          value={valores.estoque_minimo_g}
-          onChange={alterar}
-          required
-          dica="Abaixo disso, aparece o alerta de estoque baixo."
-        />
-        <Campo
-          rotulo="Porção (g)"
-          type="number"
-          min="1"
-          name="porcao_g"
-          value={valores.porcao_g}
-          onChange={alterar}
-          required
-          dica="Mínima: só para manter o animal no prato durante a leitura do chip."
-        />
-        <Campo
-          rotulo="Limite de porções por dia"
-          type="number"
-          min="0"
-          name="limite_porcoes_dia"
-          value={valores.limite_porcoes_dia}
-          onChange={alterar}
-          required
-        />
-      </div>
+      <Campo
+        rotulo="Limite de porções por dia"
+        type="number"
+        min="0"
+        name="limite_porcoes_dia"
+        value={valores.limite_porcoes_dia}
+        onChange={alterar}
+        required
+        dica="O nível de ração não é digitado aqui: ele vem do sensor do próprio ponto."
+      />
       <SeletorLocal
         rotulo="Localização do ponto"
         valor={{ lat: valores.lat, lng: valores.lng }}

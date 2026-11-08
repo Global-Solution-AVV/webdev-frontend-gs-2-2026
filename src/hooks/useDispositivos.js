@@ -4,12 +4,11 @@ import {
   listarDispositivos,
   criarDispositivo,
   atualizarDispositivo,
-  reporEstoque,
   gerarChaveDispositivo,
   excluirDispositivo,
 } from '../services/dispositivosService'
 
-/** CRUD dos pontos de identificação, estoque de ração e chave de API (coordenação). */
+/** CRUD dos pontos de identificação e chave de API (coordenação). O nível de ração vem das leituras. */
 export function useDispositivos() {
   const { dados, erro, carregando, recarregar, setDados } = useRequisicao(listarDispositivos, [])
 
@@ -36,15 +35,6 @@ export function useDispositivos() {
     [trocar],
   )
 
-  const repor = useCallback(
-    async (id, quantidade) => {
-      const d = await reporEstoque(id, quantidade)
-      trocar(d)
-      return d
-    },
-    [trocar],
-  )
-
   const gerarChave = useCallback(
     async (id) => {
       const { chave } = await gerarChaveDispositivo(id)
@@ -65,13 +55,11 @@ export function useDispositivos() {
   const lista = dados ?? []
   return {
     dispositivos: lista,
-    comEstoqueBaixo: lista.filter((d) => d.estoque_baixo),
     carregando,
     erro,
     recarregar,
     criar,
     atualizar,
-    repor,
     gerarChave,
     excluir,
   }
