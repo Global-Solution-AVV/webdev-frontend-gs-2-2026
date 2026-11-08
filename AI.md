@@ -77,6 +77,18 @@ Cada regra de negócio virou uma função pura em `api/_lib/regras/`, com testes
 
 **Resposta:** a IA escreveu `scripts/seed.js`, que apaga e recria os dados de demonstração pelo supabase-js: 12 pontos de identificação (DV-001 a DV-012), 30 tutores, 50 pets com chip (10 perdidos com cartaz e 7 encontrados), 5 ONGs, leituras com chip, avistamentos sem chip e 7 ocorrências. O seed cobre de propósito os cenários da spec: ocorrências em todos os status, uma reserva vencida, um ponto a um dia de abrir ocorrência, estoque baixo, ponto em manutenção, ONG sem vagas, leituras descartadas e um chip sem cadastro. Todos os nomes, telefones e e-mails são fictícios (`@devolta.demo`), como pede a regra "Dados com cuidado" da GS.
 
+### 3.6 Painel ao vivo dos pontos (MQTT)
+
+**Prompt (resumo):** "O professor de Edge exige um back-end IoT Cloud com MQTT broker. Esses dados podem aparecer na aba /coordenacao, onde a coordenação já vê o estoque de cada dispositivo. Integre direto nessa página."
+
+**Resposta:** a IA atualizou primeiro as specs de Edge (§7.5, contrato dos tópicos) e da plataforma (§6.3), depois escreveu as funções puras de `src/lib/telemetria.js` com testes, o service `mqttService.js`, o hook `usePontosAoVivo` e os componentes `PainelAoVivo` e `ResumoAoVivo`. A validação incluiu um teste de ida e volta pelo broker público: uma mensagem publicada por TCP (como o ESP32) chegou ao assinante por WebSocket (como o navegador) e foi interpretada pela mesma função da página.
+
+### 3.7 Estoque pela leitura do sensor
+
+**Prompt (resumo):** "Quero remover o nível de estoque editável do dispositivo: o nível deve vir apenas da leitura. O dispositivo continua ativo, mas mostrando a data da última medição. Simule o envio para os outros dispositivos, para que tenham histórico."
+
+**Resposta:** a IA atualizou as specs (§6.4 e regras 2 e 13), criou a tabela `leituras_dispositivo` com uma migração só aditiva (o banco é o mesmo do site publicado, então as colunas antigas ficam até o deploy), o endpoint `POST /api/leituras` com validação em função pura e testes, a coluna de última medição, o histórico por ponto e o script `scripts/simular-leituras.js`, que envia o histórico pela mesma API do ESP32.
+
 ## 4. Aplicação no projeto
 
 | Parte                                          | Papel da IA                                                            | Papel da equipe                                                            |

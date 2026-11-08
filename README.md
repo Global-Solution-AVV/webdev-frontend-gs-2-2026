@@ -23,12 +23,12 @@ Aplicação web das disciplinas **Front-end Design** e **Web Development**.
 
 ## Funcionalidades
 
-| Perfil                  | O que faz                                                                                                                                                                                                                                             |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Público** (sem login) | Mapa de avistamentos e animais perdidos, com filtro por período, espécie e raio ("perto de mim"), e mural de **cartazes** de pets com chip (procurando / encontrados)                                                                                 |
-| **Tutor**               | CRUD de pets com microchip, modo perdido, cartaz público opcional (expõe o telefone), avisos (SMS simulado) com os botões "Está tudo bem" / "Ele está perdido", CRUD de animais perdidos sem chip e comparação com avistamentos próximos ("É o meu!") |
-| **ONG**                 | Cadastro da área de atuação e das vagas, painel de ocorrências (só as do raio e com vaga), assumir resgate, atualizar status, histórico e o **padrão de horários** ("aparece entre 21h e 23h")                                                        |
-| **Coordenação**         | CRUD dos pontos de identificação, estoque de ração com alerta, chave de API por ponto, **simulador de detecção** e visão de todas as ocorrências                                                                                                      |
+| Perfil                  | O que faz                                                                                                                                                                                                                                                                                                                                  |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Público** (sem login) | Mapa de avistamentos e animais perdidos, com filtro por período, espécie e raio ("perto de mim"), e mural de **cartazes** de pets com chip (procurando / encontrados)                                                                                                                                                                      |
+| **Tutor**               | CRUD de pets com microchip, modo perdido, cartaz público opcional (expõe o telefone), avisos (SMS simulado) com os botões "Está tudo bem" / "Ele está perdido", CRUD de animais perdidos sem chip e comparação com avistamentos próximos ("É o meu!")                                                                                      |
+| **ONG**                 | Cadastro da área de atuação e das vagas, painel de ocorrências (só as do raio e com vaga), assumir resgate, atualizar status, histórico e o **padrão de horários** ("aparece entre 21h e 23h")                                                                                                                                             |
+| **Coordenação**         | CRUD dos pontos de identificação, nível de ração medido pelo sensor de cada ponto (com data da última medição, histórico e alerta de estoque baixo), chave de API por ponto, **painel ao vivo dos pontos via MQTT** (estado, silo, temperatura e umidade publicados pelo ESP32), **simulador de detecção** e visão de todas as ocorrências |
 
 Regras de negócio principais: máximo de 1 aviso por dia por pet (exceto em modo perdido), avistamento só vira resgate depois de **N = 3 dias** de recorrência, reserva da ONG expira em **X = 24 h** sem atualização, e o telefone do tutor só aparece no cartaz público, se ele autorizar, e só enquanto o pet está perdido.
 
@@ -72,9 +72,9 @@ src/
 
 Separação de responsabilidades: **componentes não chamam `fetch`**. Páginas usam hooks; hooks usam services.
 
-**Custom hooks:** `useOcorrencias`, `useOcorrencia`, `useAvistamentos`, `usePets`, `useAnimaisPerdidos`, `useDispositivos`, `useNotificacoes`, `useMinhaOng`, `useOngs`, `useAuth`, `useFormulario`, `useRequisicao`.
+**Custom hooks:** `usePontosAoVivo`, `useLeituras`, `useOcorrencias`, `useOcorrencia`, `useAvistamentos`, `usePets`, `useAnimaisPerdidos`, `useDispositivos`, `useNotificacoes`, `useMinhaOng`, `useOngs`, `useAuth`, `useFormulario`, `useRequisicao`.
 
-**Componentes:** `Header`, `Footer`, `RotaProtegida`, `Mapa`, `LegendaMapa`, `SeletorLocal`, `PainelMapaPublico`, `CardPet`, `CardAnimalPerdido`, `CardOcorrencia`, `BadgeStatus`, `TimelineHistorico`, `ListaNotificacoes`, `FotoAnimal`, `FormPet`, `FormAnimalPerdido`, `FormOng`, `FormDispositivo`, `Campo`, `Modal`, `ConfirmDialog`, `Alerta`, `Carregando`, `EstadoVazio`.
+**Componentes:** `PainelAoVivo`, `LeituraSensor`, `HistoricoLeituras`, `Header`, `Footer`, `RotaProtegida`, `Mapa`, `LegendaMapa`, `SeletorLocal`, `PainelMapaPublico`, `CardPet`, `CardAnimalPerdido`, `CardOcorrencia`, `BadgeStatus`, `TimelineHistorico`, `ListaNotificacoes`, `FotoAnimal`, `FormPet`, `FormAnimalPerdido`, `FormOng`, `FormDispositivo`, `Campo`, `Modal`, `ConfirmDialog`, `Alerta`, `Carregando`, `EstadoVazio`.
 
 ## Pré-requisitos
 
@@ -88,7 +88,7 @@ Separação de responsabilidades: **componentes não chamam `fetch`**. Páginas 
    ```bash
    npm install
    ```
-2. **Crie o banco**: no Supabase, abra o _SQL Editor_ e rode o arquivo `supabase/schema.sql` inteiro. Banco criado antes de 06/11/2026? Rode também `supabase/migracoes/2026-11-06-cartazes.sql`.
+2. **Crie o banco**: no Supabase, abra o _SQL Editor_ e rode o arquivo `supabase/schema.sql` inteiro. Banco criado antes de 06/11/2026? Rode também `supabase/migracoes/2026-11-06-cartazes.sql`. Criado antes de 08/11/2026? Rode também `supabase/migracoes/2026-11-08-leituras.sql` (leituras do sensor).
 3. **Configure as variáveis**: copie `.env.example` para `.env` e preencha com os dados do projeto Supabase (_Project Settings → API_).
 
    | Variável                                      | Uso                                                               |
@@ -116,15 +116,16 @@ Separação de responsabilidades: **componentes não chamam `fetch`**. Páginas 
 
 ### Scripts
 
-| Comando            | O que faz                             |
-| ------------------ | ------------------------------------- |
-| `npm run dev:full` | Front + API (`vercel dev`)            |
-| `npm run dev`      | Só o front-end (Vite)                 |
-| `npm run build`    | Build de produção                     |
-| `npm run lint`     | ESLint                                |
-| `npm run format`   | Prettier                              |
-| `npm test`         | Testes das regras de negócio (Vitest) |
-| `npm run seed`     | Dados fictícios no Supabase           |
+| Comando                            | O que faz                                                                                            |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `npm run dev:full`                 | Front + API (`vercel dev`)                                                                           |
+| `npm run dev`                      | Só o front-end (Vite)                                                                                |
+| `npm run build`                    | Build de produção                                                                                    |
+| `npm run lint`                     | ESLint                                                                                               |
+| `npm run format`                   | Prettier                                                                                             |
+| `npm test`                         | Testes das regras de negócio (Vitest)                                                                |
+| `npm run seed`                     | Dados fictícios no Supabase                                                                          |
+| `node scripts/simular-leituras.js` | Envia pela API um histórico de leituras do sensor para DV-002 a DV-012 (`--url` para outro servidor) |
 
 ## API
 
@@ -136,7 +137,8 @@ Todas as rotas respondem JSON. Erros vêm como `{ "erro": "mensagem" }`. Rotas c
 | `/api/pets`         | `GET` · `GET ?cartazes=1` (público) · `GET /:id` · `POST` · `PUT /:id` · `PATCH /:id/modo-perdido` · `PATCH /:id/cartaz` · `DELETE /:id` |
 | `/api/perdidos`     | `GET` (público) · `GET ?meus=1` · `GET /:id` · `GET /:id/avistamentos-proximos` · `POST` · `PUT /:id` · `DELETE /:id`                    |
 | `/api/ongs`         | `GET` (público) · `GET ?minha=1` · `POST` · `PUT /:id` · `DELETE /:id`                                                                   |
-| `/api/dispositivos` | `GET` · `POST` · `PUT /:id` · `POST /:id/repor` · `POST /:id/chave` · `DELETE /:id`                                                      |
+| `/api/dispositivos` | `GET` (com a última leitura de cada ponto) · `POST` · `PUT /:id` · `POST /:id/chave` · `DELETE /:id`                                     |
+| `/api/leituras`     | `POST` leitura do sensor (`X-Device-Key`) · `GET ?dispositivo_id=` histórico (coordenação)                                               |
 | `/api/deteccoes`    | `POST` (ingestão) · `GET`                                                                                                                |
 | `/api/avistamentos` | `GET ?lat&lng&raio_km&desde&ate&especie` · `PATCH /:id/reconhecer`                                                                       |
 | `/api/ocorrencias`  | `GET` · `GET /:id` · `POST /:id/assumir` · `PATCH /:id/status` · `DELETE /:id`                                                           |
@@ -155,6 +157,10 @@ curl -X POST https://SEU-DEPLOY.vercel.app/api/deteccoes \
 
 Resposta: `{ "resultado": "tutor" | "avistamento" | "descartada", "motivo": "...", "liberar_porcao": true }`.
 As chaves `dv_demo_*` existem só nos dados de demonstração; gere chaves reais na tela **Pontos → Chave**.
+
+## Painel ao vivo (MQTT)
+
+O ponto de identificação (ESP32, disciplina de Edge) publica no broker público `broker.hivemq.com` os tópicos `devolta-gs2026/pontos/<codigo>/{conexao,telemetria,estado,evento}`. A página **Pontos** da coordenação assina esses tópicos direto do navegador (`wss://broker.hivemq.com:8884/mqtt`, biblioteca `mqtt`) e mostra cada ponto ao vivo ao lado do estoque. A interpretação das mensagens está em `src/lib/telemetria.js`, com testes. O broker e o prefixo podem ser trocados por `VITE_MQTT_URL` e `VITE_MQTT_PREFIXO`. Só trafegam dados não sensíveis: o chip vai mascarado.
 
 ## Deploy na Vercel
 
