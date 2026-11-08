@@ -1,10 +1,16 @@
 import { Circle } from 'lucide-react'
-import { STATUS_OCORRENCIA, STATUS_DISPOSITIVO, STATUS_PERDIDO } from '../lib/formatos'
+import {
+  STATUS_OCORRENCIA,
+  STATUS_DISPOSITIVO,
+  STATUS_PERDIDO,
+  ESTADOS_PONTO,
+} from '../lib/formatos'
 
 const MAPAS = {
   ocorrencia: STATUS_OCORRENCIA,
   dispositivo: STATUS_DISPOSITIVO,
   perdido: STATUS_PERDIDO,
+  ponto: ESTADOS_PONTO,
 }
 
 /** Status com cor, ícone E texto (nunca só cor), para ser acessível. */

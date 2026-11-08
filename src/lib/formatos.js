@@ -1,13 +1,19 @@
 // Textos e formatações exibidos na interface.
 import {
+  Ban,
   CircleAlert,
   CircleCheck,
   CirclePause,
+  Cpu,
   House,
+  PackageOpen,
   Radio,
+  ScanLine,
   Search,
   SearchX,
+  Thermometer,
   Truck,
+  Utensils,
   Wrench,
 } from 'lucide-react'
 
@@ -81,6 +87,48 @@ export const STATUS_DISPOSITIVO = {
     cor: 'bg-stone-200 text-stone-800 ring-stone-300',
     icone: CirclePause,
   },
+}
+
+/** Estados publicados pelo ESP32 (MQTT), com cor, ícone e texto para o painel ao vivo. */
+export const ESTADOS_PONTO = {
+  AGUARDANDO: {
+    rotulo: 'Aguardando',
+    cor: 'bg-emerald-100 text-emerald-900 ring-emerald-300',
+    icone: Radio,
+  },
+  MOVIMENTO: { rotulo: 'Movimento', cor: 'bg-sky-100 text-sky-900 ring-sky-300', icone: ScanLine },
+  ANIMAL_CONFIRMADO: {
+    rotulo: 'Animal confirmado',
+    cor: 'bg-sky-100 text-sky-900 ring-sky-300',
+    icone: Utensils,
+  },
+  LENDO_CHIP: {
+    rotulo: 'Lendo chip',
+    cor: 'bg-sky-100 text-sky-900 ring-sky-300',
+    icone: ScanLine,
+  },
+  CHIP_ENCONTRADO: {
+    rotulo: 'Chip encontrado',
+    cor: 'bg-emerald-100 text-emerald-900 ring-emerald-300',
+    icone: CircleCheck,
+  },
+  SEM_CHIP: {
+    rotulo: 'Sem chip',
+    cor: 'bg-violet-100 text-violet-900 ring-violet-300',
+    icone: Search,
+  },
+  BLOQUEADO: { rotulo: 'Bloqueado', cor: 'bg-stone-200 text-stone-800 ring-stone-300', icone: Ban },
+  ESTOQUE_BAIXO: {
+    rotulo: 'Estoque baixo',
+    cor: 'bg-alerta-100 text-alerta-800 ring-alerta-400',
+    icone: PackageOpen,
+  },
+  RACAO_EM_RISCO: {
+    rotulo: 'Ração em risco',
+    cor: 'bg-alerta-100 text-alerta-800 ring-alerta-400',
+    icone: Thermometer,
+  },
+  FALHA: { rotulo: 'Falha de sensor', cor: 'bg-rose-100 text-rose-900 ring-rose-300', icone: Cpu },
 }
 
 export const STATUS_PERDIDO = {
