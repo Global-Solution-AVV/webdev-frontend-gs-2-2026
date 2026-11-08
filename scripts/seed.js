@@ -11,10 +11,12 @@
 // - DV-003 a um dia de abrir ocorrência (simule um cachorro sem chip hoje para ver abrir);
 // - pets em modo perdido (alerta imediato) e fora dele (aviso diário, com e sem resposta);
 // - animais perdidos sem chip, um já encontrado após o tutor reconhecer um avistamento;
-// - ponto com estoque baixo, ponto em manutenção, ONG sem vagas, leituras descartadas
+// - leituras do sensor de 72 h em todos os pontos (DV-004 com estoque baixo, DV-008 com ração em
+//   risco na umidade da noite, DV-011 parado há 40 h), ponto em manutenção, ONG sem vagas, leituras descartadas
 //   e um chip lido que não tem cadastro.
 import { createClient } from '@supabase/supabase-js'
 import { createHash } from 'node:crypto'
+import { historicoSimulado } from './leiturasSimuladas.js'
 
 const url = process.env.SUPABASE_URL
 const chave = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -358,71 +360,61 @@ const DISPOSITIVOS = [
     local_nome: 'Clínica veterinária · Av. Paulista',
     lat: -23.5629,
     lng: -46.6544,
-    estoque_g: 3000,
   },
   {
     codigo: 'DV-002',
     local_nome: 'Praça perto da R. Augusta',
     lat: -23.556,
     lng: -46.662,
-    estoque_g: 1800,
   },
   {
     codigo: 'DV-003',
     local_nome: 'Pet shop · Parque da Aclimação',
     lat: -23.5726,
     lng: -46.629,
-    estoque_g: 2500,
   },
   {
     codigo: 'DV-004',
     local_nome: 'Clínica veterinária · Vila Mariana',
     lat: -23.588,
     lng: -46.634,
-    estoque_g: 300,
   },
   {
     codigo: 'DV-005',
     local_nome: 'Praça Benedito Calixto · Pinheiros',
     lat: -23.556,
     lng: -46.6826,
-    estoque_g: 2200,
   },
   {
     codigo: 'DV-006',
     local_nome: 'Pet shop · Lapa',
     lat: -23.5235,
     lng: -46.7016,
-    estoque_g: 1500,
   },
   {
     codigo: 'DV-007',
     local_nome: 'Clínica veterinária · Tatuapé',
     lat: -23.5403,
     lng: -46.5763,
-    estoque_g: 2800,
   },
-  { codigo: 'DV-008', local_nome: 'Parque da Mooca', lat: -23.559, lng: -46.599, estoque_g: 900 },
+  { codigo: 'DV-008', local_nome: 'Parque da Mooca', lat: -23.559, lng: -46.599 },
   {
     codigo: 'DV-009',
     local_nome: 'Pet shop · Santana',
     lat: -23.502,
     lng: -46.625,
-    estoque_g: 2000,
   },
   {
     codigo: 'DV-010',
     local_nome: 'Clínica veterinária · Santo Amaro',
     lat: -23.654,
     lng: -46.709,
-    estoque_g: 2600,
   },
   {
     codigo: 'DV-011',
     local_nome: 'Praça em Moema · perto do Ibirapuera',
     lat: -23.601,
     lng: -46.662,
-    estoque_g: 1200,
     status: 'manutencao',
   },
   {
@@ -430,7 +422,6 @@ const DISPOSITIVOS = [
     local_nome: 'Pet shop · Butantã',
     lat: -23.571,
     lng: -46.708,
-    estoque_g: 1700,
   },
 ]
 
@@ -863,10 +854,7 @@ async function main() {
           local_nome: d.local_nome,
           lat: d.lat,
           lng: d.lng,
-          estoque_g: d.estoque_g,
-          estoque_minimo_g: 500,
           limite_porcoes_dia: 10,
-          porcao_g: 20,
           status: d.status ?? 'ativo',
           api_key_hash: hash(`dv_demo_${d.codigo}`),
         })),
@@ -875,6 +863,18 @@ async function main() {
     'Dispositivos',
   )
   const ponto = Object.fromEntries(disp.map((d) => [d.codigo, d]))
+
+  console.log('Gravando o histórico de leituras do sensor (72 h por ponto)...')
+  ok(
+    await db
+      .from('leituras_dispositivo')
+      .insert(
+        disp.flatMap((d) =>
+          historicoSimulado(d.codigo).map((l) => ({ dispositivo_id: d.id, ...l })),
+        ),
+      ),
+    'Leituras',
+  )
 
   console.log('Criando ONGs...')
   const ongs = ok(
